@@ -28,7 +28,8 @@ const endingEvent: ArchiveEvent = {
 
 const events = [...archiveEvents, endingEvent];
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${url}` : url;
+const encodeAssetPath = (url: string) => url.split("/").map((part, index) => index === 0 ? part : encodeURIComponent(decodeURIComponent(part))).join("/");
+const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${encodeAssetPath(url)}` : url;
 
 
 
