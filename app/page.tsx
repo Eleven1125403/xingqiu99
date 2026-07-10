@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -30,6 +30,8 @@ const events = [...archiveEvents, endingEvent];
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const encodeAssetPath = (url: string) => url.split("/").map((part, index) => index === 0 ? part : encodeURIComponent(decodeURIComponent(part))).join("/");
 const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${encodeAssetPath(url)}` : url;
+const previewAssetPath = (url: string) => url.startsWith("/archive/") ? url.replace(/^\/archive\//, "/archive-preview/").replace(/\.[^.\/]+$/, ".jpg") : url;
+const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
 
 
 
@@ -53,12 +55,12 @@ function ImageSwitcher({ label, images, onOpen }: { label: string; images: strin
 
   return (
     <div className="image-switcher">
-      <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "截图放大"}>
-        <img src={assetUrl(current)} alt={label + "??"} loading="lazy" decoding="async" />
+      <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "鎴浘鏀惧ぇ"}>
+        <img src={previewAssetUrl(current)} alt={label + "??"} loading="eager" decoding="async" />
       </button>
       {images.length > 1 && (
-        <button className="image-switcher-label" onClick={next} type="button" aria-label="切换截图">
-          {index + 1}/{images.length}，点击可切换
+        <button className="image-switcher-label" onClick={next} type="button" aria-label="鍒囨崲鎴浘">
+          {index + 1}/{images.length}锛岀偣鍑诲彲鍒囨崲
         </button>
       )}
     </div>
@@ -76,7 +78,7 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
     return (
       <div className="placeholder-shot mt-8">
         <div className="shot-orbit" />
-        <span>微博截图 / 活动图片占位</span>
+        <span>寰崥鎴浘 / 娲诲姩鍥剧墖鍗犱綅</span>
       </div>
     );
   }
@@ -91,7 +93,7 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
       )}
       {other.length > 0 && (
         <div className="memory-image-extra">
-          {other.map((image) => <button className="extra-image-button" key={image} type="button" onClick={() => onOpen(image)}><img src={assetUrl(image)} alt={event.title + "??"} loading="lazy" decoding="async" /></button>)}
+          {other.map((image) => <button className="extra-image-button" key={image} type="button" onClick={() => onOpen(image)}><img src={previewAssetUrl(image)} alt={event.title + "??"} loading="eager" decoding="async" /></button>)}
         </div>
       )}
     </div>
@@ -125,7 +127,7 @@ const collectPreloadAssets = () => {
     ...event.imageGroups.xing,
     ...event.imageGroups.other,
   ]);
-  return Array.from(new Set(["/constellation-bg.jpg", "/title-handwriting.png", ...archiveImages]));
+  return Array.from(new Set(["/constellation-bg.jpg", "/title-handwriting.png", ...archiveImages.map(previewAssetPath)]));
 };
 
 const preloadImage = (url: string) => new Promise<void>((resolve) => {
@@ -362,9 +364,9 @@ export default function Home() {
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && searchDate()}
             placeholder={"\u641c\u7d22\u65f6\u95f4 / tag / \u8282\u70b9\u540d\u79f0"}
-            aria-label="时间搜索"
+            aria-label="鏃堕棿鎼滅储"
           />
-          <button onClick={searchDate} aria-label="时间搜索">定位</button>
+          <button onClick={searchDate} aria-label="鏃堕棿鎼滅储">瀹氫綅</button>
         </div>
         <div className="header-actions">
           <button
@@ -391,7 +393,7 @@ export default function Home() {
           transition={{ delay: isPreloading ? 0 : 3.1, duration: 1 }}
         >
           <p className="mb-5 text-[15px] uppercase tracking-[0.5em] text-violet-100/66">Rumors fly, Love is the only truth</p>
-          <h1 className="handwriting-title-wrap" aria-label="这条路，我只想和你走">
+          <h1 className="handwriting-title-wrap" aria-label="杩欐潯璺紝鎴戝彧鎯冲拰浣犺蛋">
             <img className="handwriting-title" src={assetUrl("/title-handwriting.png")} alt="" aria-hidden="true" decoding="async" />
           </h1>
         </motion.div>
@@ -413,7 +415,7 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.08 }}
                 transition={{ duration: 0.9, ease: "easeOut" }}
-                aria-label="放大星河"
+                aria-label="鏀惧ぇ鏄熸渤"
               >
                 <svg className="overview-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                   <motion.polyline
@@ -436,7 +438,7 @@ export default function Home() {
                     transition={{ delay: (isPreloading ? 0 : 3) + index * (2 / Math.max(placedEvents.length - 1, 1)), duration: 0.42, ease: "easeOut" }}
                   />
                 ))}
-                <span className="overview-hint"><Maximize2 size={14} />点击放大星河</span>
+                <span className="overview-hint"><Maximize2 size={14} />鐐瑰嚮鏀惧ぇ鏄熸渤</span>
               </motion.button>
             ) : (
               <motion.div
@@ -556,7 +558,7 @@ export default function Home() {
                 {selected.displayDate && <p className="flex items-center gap-2 text-sm text-violet-100/60"><CalendarDays size={15} />{selected.displayDate}</p>}
                 <h2 className="mt-3 text-3xl font-light tracking-normal text-white">{eventLabel(selected)}</h2>
               </div>
-              <button className="icon-button" onClick={() => setSelectedId(null)} aria-label="时间搜索"><X size={18} /></button>
+              <button className="icon-button" onClick={() => setSelectedId(null)} aria-label="鏃堕棿鎼滅储"><X size={18} /></button>
             </div>
 
             <MemoryImages event={selected} onOpen={setLightboxImage} />
@@ -585,11 +587,11 @@ export default function Home() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.28 }}
             type="button"
-            aria-label="关闭放大图片"
+            aria-label="鍏抽棴鏀惧ぇ鍥剧墖"
           >
             <motion.img
-              src={assetUrl(lightboxImage)}
-              alt="微博截图放大"
+              src={previewAssetUrl(lightboxImage)}
+              alt="寰崥鎴浘鏀惧ぇ"
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
@@ -601,3 +603,6 @@ export default function Home() {
     </main>
   );
 }
+
+
+
