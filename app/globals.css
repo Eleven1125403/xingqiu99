@@ -18,6 +18,74 @@ body {
 button, input { font: inherit; }
 button { cursor: pointer; }
 
+.preload-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(86, 55, 140, 0.18), transparent 34%),
+    linear-gradient(180deg, #020107 0%, #070316 55%, #020107 100%);
+  color: rgba(255, 248, 238, 0.94);
+}
+
+.preload-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.52) 0 1px, transparent 1.5px);
+  background-size: 92px 92px;
+  opacity: 0.08;
+  mask-image: radial-gradient(circle at center, black, transparent 76%);
+}
+
+.preload-inner {
+  position: relative;
+  width: min(520px, calc(100vw - 56px));
+  text-align: center;
+}
+
+.preload-kicker {
+  margin: 0 0 18px;
+  color: rgba(221, 214, 254, 0.54);
+  font-size: 12px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.preload-inner h2 {
+  margin: 0 0 28px;
+  color: rgba(255, 248, 238, 0.94);
+  font-size: clamp(24px, 4vw, 42px);
+  font-weight: 300;
+  letter-spacing: 0;
+  text-shadow: 0 0 24px rgba(255, 195, 130, 0.18);
+}
+
+.preload-bar {
+  position: relative;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(235, 226, 255, 0.14);
+}
+
+.preload-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 205, 145, 0.45), rgba(255, 244, 220, 0.96), rgba(196, 154, 255, 0.6));
+  box-shadow: 0 0 18px rgba(255, 205, 145, 0.36);
+}
+
+.preload-progress {
+  margin: 16px 0 0;
+  color: rgba(221, 214, 254, 0.58);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+
 .opening-blackout {
   pointer-events: none;
   position: fixed;

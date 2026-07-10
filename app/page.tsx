@@ -119,6 +119,22 @@ const eventMatchesQuery = (event: ArchiveEvent, queryText: string) => {
 
 const roundCoord = (value: number) => Math.round(value * 1000) / 1000;
 
+const collectPreloadAssets = () => {
+  const archiveImages = events.flatMap((event) => [
+    ...event.imageGroups.qiu,
+    ...event.imageGroups.xing,
+    ...event.imageGroups.other,
+  ]);
+  return Array.from(new Set(["/constellation-bg.jpg", "/title-handwriting.png", ...archiveImages]));
+};
+
+const preloadImage = (url: string) => new Promise<void>((resolve) => {
+  const image = new Image();
+  image.onload = () => resolve();
+  image.onerror = () => resolve();
+  image.src = assetUrl(url);
+});
+
 const placeEvents = (items: ArchiveEvent[]): PlacedEvent[] => {
   const total = Math.max(items.length - 1, 1);
   return items.map((event, index) => {
@@ -145,11 +161,14 @@ export default function Home() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [isMusicOn, setIsMusicOn] = useState(false);
   const [searchResults, setSearchResults] = useState<{ query: string; events: PlacedEvent[] } | null>(null);
+  const [isPreloading, setIsPreloading] = useState(true);
+  const [preloadProgress, setPreloadProgress] = useState(0);
   const archiveRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const reduceMotion = useReducedMotion();
 
   const placedEvents = useMemo(() => placeEvents(events), []);
+  const preloadAssets = useMemo(() => collectPreloadAssets(), []);
   const selected = placedEvents.find((event) => event.id === selectedId);
   const selectedIndex = selected ? placedEvents.findIndex((event) => event.id === selected.id) : -1;
   const trackWidth = Math.max(1800, placedEvents.length * 112 + 280);
@@ -237,11 +256,39 @@ export default function Home() {
   };
 
   useEffect(() => {
+    let cancelled = false;
+    let completed = 0;
+    const total = Math.max(preloadAssets.length, 1);
+    const queue = [...preloadAssets];
+    const workers = Array.from({ length: Math.min(8, queue.length) }, async () => {
+      while (queue.length > 0 && !cancelled) {
+        const asset = queue.shift();
+        if (!asset) continue;
+        await preloadImage(asset);
+        completed += 1;
+        if (!cancelled) setPreloadProgress(Math.round((completed / total) * 100));
+      }
+    });
+
+    void Promise.all(workers).then(() => {
+      if (!cancelled) {
+        setPreloadProgress(100);
+        window.setTimeout(() => setIsPreloading(false), 520);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [preloadAssets]);
+
+  useEffect(() => {
+    if (isPreloading) return;
     const timer = window.setTimeout(() => {
       void playMusic();
     }, 1300);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [isPreloading]);
 
   const handleFirstInteraction = (event: React.PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
@@ -265,9 +312,29 @@ export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white selection:bg-fuchsia-200/30" onPointerDownCapture={handleFirstInteraction}>
       <audio ref={audioRef} src={assetUrl("/music/bgm.mp3")} loop preload="auto" playsInline />
-      <motion.div className="cosmic-bg" style={{ "--constellation-bg": `url("${assetUrl("/constellation-bg.jpg")}")` } as CSSProperties} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 2, ease: "easeOut" }} />
-      <motion.div className="nebula-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.15, duration: 2, ease: "easeOut" }} />
-      <motion.div className="opening-blackout" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: 1, duration: 2, ease: "easeInOut" }} />
+      <AnimatePresence>
+        {isPreloading && (
+          <motion.div
+            className="preload-screen"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          >
+            <div className="preload-inner">
+              <p className="preload-kicker">Constellation Archive</p>
+              <h2>{"\u6b63\u5728\u70b9\u4eae\u661f\u56fe"}</h2>
+              <div className="preload-bar" aria-hidden="true">
+                <motion.span animate={{ width: `${preloadProgress}%` }} transition={{ duration: 0.28, ease: "easeOut" }} />
+              </div>
+              <p className="preload-progress">{preloadProgress}%</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.div className="cosmic-bg" style={{ "--constellation-bg": `url("${assetUrl("/constellation-bg.jpg")}")` } as CSSProperties} initial={{ opacity: 0 }} animate={{ opacity: isPreloading ? 0 : 1 }} transition={{ delay: isPreloading ? 0 : 1, duration: 2, ease: "easeOut" }} />
+      <motion.div className="nebula-layer" initial={{ opacity: 0 }} animate={{ opacity: isPreloading ? 0 : 1 }} transition={{ delay: isPreloading ? 0 : 1.15, duration: 2, ease: "easeOut" }} />
+      <motion.div className="opening-blackout" initial={{ opacity: 1 }} animate={{ opacity: isPreloading ? 1 : 0 }} transition={{ delay: isPreloading ? 0 : 1, duration: 2, ease: "easeInOut" }} />
       <div className="grain" />
       <div className="fixed inset-0 pointer-events-none">
         {starField.map((star, index) => (
@@ -277,7 +344,7 @@ export default function Home() {
             style={{ left: star.left + "%", top: star.top + "%", width: star.size, height: star.size }}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: star.opacity, scale: 1 }}
-            transition={{ delay: 2.35 + star.delay * 0.28, duration: 1.2 }}
+            transition={{ delay: (isPreloading ? 0 : 2.35) + star.delay * 0.28, duration: 1.2 }}
           />
         ))}
       </div>
@@ -286,7 +353,7 @@ export default function Home() {
         className="fixed left-0 right-0 top-0 z-30 flex items-start justify-between gap-4 px-5 py-5 sm:px-9"
         initial={{ opacity: 0, y: -18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 3.05, duration: 0.9 }}
+        transition={{ delay: isPreloading ? 0 : 3.05, duration: 0.9 }}
       >
         <div className="search-shell">
           <Search size={16} strokeWidth={1.5} />
@@ -321,7 +388,7 @@ export default function Home() {
           className="mb-6 max-w-[980px] lg:fixed lg:left-10 lg:top-24 lg:mb-0"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 3.1, duration: 1 }}
+          transition={{ delay: isPreloading ? 0 : 3.1, duration: 1 }}
         >
           <p className="mb-5 text-[15px] uppercase tracking-[0.5em] text-violet-100/66">Rumors fly, Love is the only truth</p>
           <h1 className="handwriting-title-wrap" aria-label="这条路，我只想和你走">
@@ -356,7 +423,7 @@ export default function Home() {
                     strokeWidth="0.1"
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ delay: 3.15, duration: 2.1, ease: "easeInOut" }}
+                    transition={{ delay: isPreloading ? 0 : 3.15, duration: 2.1, ease: "easeInOut" }}
                   />
                 </svg>
                 {placedEvents.map((event, index) => (
@@ -366,7 +433,7 @@ export default function Home() {
                     style={{ left: event.previewX + "%", top: event.previewY + "%" }}
                     initial={{ opacity: 0, scale: 0.2 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 3 + index * (2 / Math.max(placedEvents.length - 1, 1)), duration: 0.42, ease: "easeOut" }}
+                    transition={{ delay: (isPreloading ? 0 : 3) + index * (2 / Math.max(placedEvents.length - 1, 1)), duration: 0.42, ease: "easeOut" }}
                   />
                 ))}
                 <span className="overview-hint"><Maximize2 size={14} />点击放大星河</span>
