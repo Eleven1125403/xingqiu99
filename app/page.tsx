@@ -54,7 +54,7 @@ function ImageSwitcher({ label, images, onOpen }: { label: string; images: strin
   return (
     <div className="image-switcher">
       <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "截图放大"}>
-        <img src={current} alt={label + "截图"} />
+        <img src={assetUrl(current)} alt={label + "??"} loading="lazy" decoding="async" />
       </button>
       {images.length > 1 && (
         <button className="image-switcher-label" onClick={next} type="button" aria-label="切换截图">
@@ -91,7 +91,7 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
       )}
       {other.length > 0 && (
         <div className="memory-image-extra">
-          {other.map((image) => <button className="extra-image-button" key={image} type="button" onClick={() => onOpen(image)}><img src={image} alt={event.title + "??图片"} /></button>)}
+          {other.map((image) => <button className="extra-image-button" key={image} type="button" onClick={() => onOpen(image)}><img src={assetUrl(image)} alt={event.title + "??"} loading="lazy" decoding="async" /></button>)}
         </div>
       )}
     </div>
@@ -325,7 +325,7 @@ export default function Home() {
         >
           <p className="mb-5 text-[15px] uppercase tracking-[0.5em] text-violet-100/66">Rumors fly, Love is the only truth</p>
           <h1 className="handwriting-title-wrap" aria-label="这条路，我只想和你走">
-            <img className="handwriting-title" src={assetUrl("/title-handwriting.png")} alt="" aria-hidden="true" />
+            <img className="handwriting-title" src={assetUrl("/title-handwriting.png")} alt="" aria-hidden="true" decoding="async" />
           </h1>
         </motion.div>
 
