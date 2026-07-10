@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CalendarDays, ChevronLeft, ChevronRight, Maximize2, Search, Shuffle, Volume2, VolumeX, X } from "lucide-react";
 import { archiveEvents, type ArchiveEvent } from "./archive-data";
@@ -26,6 +27,8 @@ const endingEvent: ArchiveEvent = {
 };
 
 const events = [...archiveEvents, endingEvent];
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${url}` : url;
 
 
 
@@ -260,8 +263,8 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white selection:bg-fuchsia-200/30" onPointerDownCapture={handleFirstInteraction}>
-      <audio ref={audioRef} src="/music/bgm.mp3" loop preload="auto" playsInline />
-      <motion.div className="cosmic-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 2, ease: "easeOut" }} />
+      <audio ref={audioRef} src={assetUrl("/music/bgm.mp3")} loop preload="auto" playsInline />
+      <motion.div className="cosmic-bg" style={{ "--constellation-bg": `url("${assetUrl("/constellation-bg.jpg")}")` } as CSSProperties} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 2, ease: "easeOut" }} />
       <motion.div className="nebula-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.15, duration: 2, ease: "easeOut" }} />
       <motion.div className="opening-blackout" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: 1, duration: 2, ease: "easeInOut" }} />
       <div className="grain" />
@@ -321,7 +324,7 @@ export default function Home() {
         >
           <p className="mb-5 text-[15px] uppercase tracking-[0.5em] text-violet-100/66">Rumors fly, Love is the only truth</p>
           <h1 className="handwriting-title-wrap" aria-label="这条路，我只想和你走">
-            <img className="handwriting-title" src="/title-handwriting.png" alt="" aria-hidden="true" />
+            <img className="handwriting-title" src={assetUrl("/title-handwriting.png")} alt="" aria-hidden="true" />
           </h1>
         </motion.div>
 
@@ -517,7 +520,7 @@ export default function Home() {
             aria-label="关闭放大图片"
           >
             <motion.img
-              src={lightboxImage}
+              src={assetUrl(lightboxImage)}
               alt="微博截图放大"
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}

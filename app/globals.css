@@ -30,7 +30,7 @@ button { cursor: pointer; }
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #050212 url('/constellation-bg.jpg') center 46% / cover no-repeat;
+  background: #050212 var(--constellation-bg) center 46% / cover no-repeat;
   transform: scale(1.14);
   filter: saturate(108%) contrast(104%) brightness(78%);
   animation: backgroundFloat 36s ease-in-out infinite alternate;
