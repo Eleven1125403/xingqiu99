@@ -713,6 +713,51 @@ button { cursor: pointer; }
   font-size: 14px;
 }
 
+
+.comment-side-panel {
+  position: fixed;
+  z-index: 39;
+  right: calc(min(54vw, 780px) + 38px);
+  top: 132px;
+  width: min(29vw, 420px);
+  max-height: calc(100vh - 170px);
+  overflow: auto;
+  border: 1px solid rgba(236, 228, 255, 0.13);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(22, 16, 42, 0.62), rgba(10, 8, 24, 0.46));
+  padding: 14px;
+  backdrop-filter: blur(26px) saturate(135%);
+  box-shadow: 0 28px 80px rgba(1, 0, 8, 0.34), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+
+.comment-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: rgba(255, 236, 209, 0.74);
+  font-size: 13px;
+}
+
+.comment-side-head button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 231, 199, 0.14);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.comment-side-panel img {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 230px);
+  object-fit: contain;
+  border-radius: 8px;
+}
 .image-lightbox {
   position: fixed;
   inset: 0;
@@ -775,6 +820,8 @@ button { cursor: pointer; }
     padding: 18px;
   }
   .constellation-stage { min-height: 620px; margin-top: 7vh; }
+  .comment-side-panel { top: auto; bottom: 14px; max-height: 42vh; }
+  .comment-side-panel img { max-height: calc(42vh - 58px); }
 }
 
 @media (max-width: 640px) {
@@ -806,6 +853,7 @@ button { cursor: pointer; }
 nextjs-portal {
   display: none !important;
 }
+
 
 
 

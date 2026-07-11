@@ -46,7 +46,7 @@ const starField = Array.from({ length: 30 }, (_, index) => ({
 }));
 
 
-function ImageSwitcher({ label, images, comments, onOpen }: { label: string; images: string[]; comments?: Record<string, string[]>; onOpen: (image: string) => void }) {
+function ImageSwitcher({ label, images, comments, onOpen, onCommentOpen }: { label: string; images: string[]; comments?: Record<string, string[]>; onOpen: (image: string) => void; onCommentOpen: (image: string) => void }) {
   const [index, setIndex] = useState(0);
   if (images.length === 0) return null;
   const current = images[index % images.length];
@@ -68,7 +68,7 @@ function ImageSwitcher({ label, images, comments, onOpen }: { label: string; ima
           </button>
         )}
         {currentComments.length > 0 && (
-          <button className="comment-button" onClick={() => onOpen(currentComments[0])} type="button" aria-label="查看评论截图">
+          <button className="comment-button" onClick={() => onCommentOpen(currentComments[0])} type="button" aria-label="查看评论截图">
             点击查看评论
           </button>
         )}
@@ -77,7 +77,7 @@ function ImageSwitcher({ label, images, comments, onOpen }: { label: string; ima
   );
 }
 
-function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: string) => void }) {
+function MemoryImages({ event, onOpen, onCommentOpen }: { event: PlacedEvent; onOpen: (image: string) => void; onCommentOpen: (image: string) => void }) {
   const { qiu, xing, other } = event.imageGroups;
   const hasPair = qiu.length > 0 || xing.length > 0;
   const hasImages = hasPair || other.length > 0;
@@ -97,8 +97,8 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
     <div className="memory-images mt-5">
       {hasPair && (
         <div className={"memory-image-pair " + (qiu.length === 0 || xing.length === 0 ? "is-single" : "") }>
-          <ImageSwitcher label="xing" images={xing} comments={event.comments} onOpen={onOpen} />
-          <ImageSwitcher label="qiu" images={qiu} comments={event.comments} onOpen={onOpen} />
+          <ImageSwitcher label="xing" images={xing} comments={event.comments} onOpen={onOpen} onCommentOpen={onCommentOpen} />
+          <ImageSwitcher label="qiu" images={qiu} comments={event.comments} onOpen={onOpen} onCommentOpen={onCommentOpen} />
         </div>
       )}
       {other.length > 0 && (
@@ -112,7 +112,7 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
                 </button>
                 {currentComments.length > 0 && (
                   <div className="image-actions">
-                    <button className="comment-button" onClick={() => onOpen(currentComments[0])} type="button" aria-label="查看评论截图">点击查看评论</button>
+                    <button className="comment-button" onClick={() => onCommentOpen(currentComments[0])} type="button" aria-label="查看评论截图">点击查看评论</button>
                   </div>
                 )}
               </div>
@@ -187,6 +187,7 @@ export default function Home() {
   const [cameraX, setCameraX] = useState(0);
   const [isTrackDragging, setIsTrackDragging] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [commentImage, setCommentImage] = useState<string | null>(null);
   const [isMusicOn, setIsMusicOn] = useState(false);
   const [searchResults, setSearchResults] = useState<{ query: string; events: PlacedEvent[] } | null>(null);
   const [isPreloading, setIsPreloading] = useState(true);
@@ -258,6 +259,7 @@ export default function Home() {
   };
   const focusEvent = (event: PlacedEvent, ceremonial = false) => {
     setSearchResults(null);
+    setCommentImage(null);
     setIsExpanded(true);
     setFocusId(event.id);
     centerCameraOn(event);
@@ -276,6 +278,7 @@ export default function Home() {
     const matches = placedEvents.filter((event) => eventMatchesQuery(event, normalized));
     if (matches.length === 0) {
       setSelectedId(null);
+      setCommentImage(null);
       setSearchResults({ query: normalized, events: [] });
       return;
     }
@@ -296,6 +299,7 @@ export default function Home() {
 
     if (exactTag || matches.length > 1) {
       setSelectedId(null);
+      setCommentImage(null);
       setSearchResults({ query: normalized, events: matches });
       return;
     }
@@ -568,7 +572,6 @@ export default function Home() {
                   <button type="button" onClick={() => nudgeTrack(-1)} aria-label="向左移动星轨"><ChevronLeft size={22} /></button>
                   <button type="button" onClick={() => nudgeTrack(1)} aria-label="向右移动星轨"><ChevronRight size={22} /></button>
                 </div>
-                <div className="drag-hint">手机可左右滑动星轨</div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -640,10 +643,10 @@ export default function Home() {
                 {selected.displayDate && <p className="flex items-center gap-2 text-sm text-violet-100/60"><CalendarDays size={15} />{selected.displayDate}</p>}
                 <h2 className="mt-3 text-3xl font-light tracking-normal text-white">{eventLabel(selected)}</h2>
               </div>
-              <button className="icon-button" onClick={() => setSelectedId(null)} aria-label="关闭详情"><X size={18} /></button>
+              <button className="icon-button" onClick={() => { setSelectedId(null); setCommentImage(null); }} aria-label="关闭详情"><X size={18} /></button>
             </div>
 
-            <MemoryImages event={selected} onOpen={setLightboxImage} />
+            <MemoryImages event={selected} onOpen={setLightboxImage} onCommentOpen={setCommentImage} />
 
             {selected.category === "ending" && <p className="mt-7 whitespace-pre-line text-base leading-8 text-violet-50/72">{selected.summary}</p>}
 
@@ -659,6 +662,24 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+
+      <AnimatePresence>
+        {commentImage && selected && (
+          <motion.aside
+            className="comment-side-panel"
+            initial={{ opacity: 0, x: 26, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 18, scale: 0.98 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="comment-side-head">
+              <span>评论截图</span>
+              <button type="button" onClick={() => setCommentImage(null)} aria-label="关闭评论截图"><X size={16} /></button>
+            </div>
+            <img src={previewAssetUrl(commentImage)} alt="评论截图" loading="eager" decoding="async" />
+          </motion.aside>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {lightboxImage && (
           <motion.button
@@ -685,6 +706,9 @@ export default function Home() {
     </main>
   );
 }
+
+
+
 
 
 
