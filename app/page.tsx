@@ -225,7 +225,9 @@ export default function Home() {
   };
 
   const beginTrackDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isExpanded || event.pointerType === "mouse" && event.button !== 0) return;
+    if (!isExpanded || event.pointerType === "mouse") return;
+    const target = event.target as HTMLElement;
+    if (target.closest("button")) return;
     dragStateRef.current = { pointerId: event.pointerId, startX: event.clientX, startCameraX: cameraX, moved: false };
     setIsTrackDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -250,6 +252,10 @@ export default function Home() {
     window.setTimeout(() => { suppressStarClickRef.current = false; }, 80);
   };
 
+  const nudgeTrack = (direction: -1 | 1) => {
+    const { visibleWidth } = getCameraBounds();
+    setCameraX((value) => clampCameraX(value - direction * Math.max(280, visibleWidth * 0.55)));
+  };
   const focusEvent = (event: PlacedEvent, ceremonial = false) => {
     setSearchResults(null);
     setIsExpanded(true);
@@ -558,7 +564,11 @@ export default function Home() {
                     );
                   })}
                 </motion.div>
-              <div className="drag-hint">按住左右拖动星轨</div>
+              <div className="track-controls" aria-label="移动星轨">
+                  <button type="button" onClick={() => nudgeTrack(-1)} aria-label="向左移动星轨"><ChevronLeft size={22} /></button>
+                  <button type="button" onClick={() => nudgeTrack(1)} aria-label="向右移动星轨"><ChevronRight size={22} /></button>
+                </div>
+                <div className="drag-hint">手机可左右滑动星轨</div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -675,6 +685,8 @@ export default function Home() {
     </main>
   );
 }
+
+
 
 
 
