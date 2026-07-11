@@ -549,10 +549,20 @@ button { cursor: pointer; }
   padding: 0;
 }
 
-.image-switcher-label {
+.image-actions {
   position: absolute;
   left: 10px;
+  right: 10px;
   bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  z-index: 2;
+}
+
+.image-switcher-label,
+.comment-button {
   border: 1px solid rgba(255, 231, 199, 0.18);
   border-radius: 999px;
   background: rgba(10, 7, 18, 0.54);
@@ -560,7 +570,6 @@ button { cursor: pointer; }
   color: rgba(255, 236, 209, 0.74);
   font-size: 12px;
   backdrop-filter: blur(10px);
-  z-index: 2;
   cursor: pointer;
 }
 
@@ -711,6 +720,8 @@ button { cursor: pointer; }
   .memory-image-pair.is-single { grid-template-columns: minmax(0, 1fr); }
   .image-switcher { min-height: 0; }
   .image-switcher img, .memory-image-extra img { max-height: 34vh; }
+  .image-actions { left: 6px; right: 6px; bottom: 6px; gap: 5px; }
+  .image-switcher-label, .comment-button { font-size: 11px; padding: 4px 7px; }
   .search-shell { width: 100%; min-height: 44px; }
   header { flex-direction: column; align-items: stretch !important; }
   .header-actions { width: 100%; justify-content: space-between; gap: 10px; }
@@ -731,5 +742,7 @@ button { cursor: pointer; }
 nextjs-portal {
   display: none !important;
 }
+
+
 
 

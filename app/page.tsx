@@ -32,6 +32,7 @@ const encodeAssetPath = (url: string) => url.split("/").map((part, index) => ind
 const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${encodeAssetPath(url)}` : url;
 const previewAssetPath = (url: string) => url.startsWith("/archive/") ? url.replace(/^\/archive\//, "/archive-preview/").replace(/\.[^.\/]+$/, ".jpg") : url;
 const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
+const imageKey = (url: string) => decodeURIComponent(url.split("/").pop() || "").replace(/\.[^.]+$/, "").toLowerCase();
 
 
 
@@ -44,10 +45,11 @@ const starField = Array.from({ length: 30 }, (_, index) => ({
 }));
 
 
-function ImageSwitcher({ label, images, onOpen }: { label: string; images: string[]; onOpen: (image: string) => void }) {
+function ImageSwitcher({ label, images, comments, onOpen }: { label: string; images: string[]; comments?: Record<string, string[]>; onOpen: (image: string) => void }) {
   const [index, setIndex] = useState(0);
   if (images.length === 0) return null;
   const current = images[index % images.length];
+  const currentComments = comments?.[imageKey(current)] || [];
   const next = (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
     setIndex((value) => (value + 1) % images.length);
@@ -58,11 +60,18 @@ function ImageSwitcher({ label, images, onOpen }: { label: string; images: strin
       <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "截图放大"}>
         <img src={previewAssetUrl(current)} alt={label + "截图"} loading="eager" decoding="async" />
       </button>
-      {images.length > 1 && (
-        <button className="image-switcher-label" onClick={next} type="button" aria-label="切换截图">
-          {index + 1}/{images.length}，点击可切换
-        </button>
-      )}
+      <div className="image-actions">
+        {images.length > 1 && (
+          <button className="image-switcher-label" onClick={next} type="button" aria-label="切换截图">
+            {index + 1}/{images.length}，点击可切换
+          </button>
+        )}
+        {currentComments.length > 0 && (
+          <button className="comment-button" onClick={() => onOpen(currentComments[0])} type="button" aria-label="查看评论截图">
+            点击查看评论
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -87,13 +96,27 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
     <div className="memory-images mt-5">
       {hasPair && (
         <div className={"memory-image-pair " + (qiu.length === 0 || xing.length === 0 ? "is-single" : "") }>
-          <ImageSwitcher label="xing" images={xing} onOpen={onOpen} />
-          <ImageSwitcher label="qiu" images={qiu} onOpen={onOpen} />
+          <ImageSwitcher label="xing" images={xing} comments={event.comments} onOpen={onOpen} />
+          <ImageSwitcher label="qiu" images={qiu} comments={event.comments} onOpen={onOpen} />
         </div>
       )}
       {other.length > 0 && (
         <div className="memory-image-extra">
-          {other.map((image) => <button className="extra-image-button" key={image} type="button" onClick={() => onOpen(image)}><img src={previewAssetUrl(image)} alt={event.title + "截图"} loading="eager" decoding="async" /></button>)}
+          {other.map((image) => {
+            const currentComments = event.comments?.[imageKey(image)] || [];
+            return (
+              <div className="image-switcher" key={image}>
+                <button className="extra-image-button image-open" type="button" onClick={() => onOpen(image)}>
+                  <img src={previewAssetUrl(image)} alt={event.title + "截图"} loading="eager" decoding="async" />
+                </button>
+                {currentComments.length > 0 && (
+                  <div className="image-actions">
+                    <button className="comment-button" onClick={() => onOpen(currentComments[0])} type="button" aria-label="查看评论截图">点击查看评论</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -126,6 +149,7 @@ const collectPreloadAssets = () => {
     ...event.imageGroups.qiu,
     ...event.imageGroups.xing,
     ...event.imageGroups.other,
+    ...Object.values(event.comments || {}).flat(),
   ]);
   return Array.from(new Set(["/constellation-bg.jpg", "/title-handwriting.png", ...archiveImages.map(previewAssetPath)]));
 };
@@ -603,6 +627,9 @@ export default function Home() {
     </main>
   );
 }
+
+
+
 
 
 
