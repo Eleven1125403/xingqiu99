@@ -387,7 +387,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0;
   pointer-events: none;
   z-index: 4;
 }
@@ -407,8 +407,23 @@ button { cursor: pointer; }
   transition: transform .25s ease, background .25s ease, border-color .25s ease;
 }
 
+.track-controls button:first-child {
+  transform: translateX(-34px);
+}
+
+.track-controls button:last-child {
+  transform: translateX(34px);
+}
+
+.track-controls button:first-child:hover {
+  transform: translateX(-34px) scale(1.06);
+}
+
+.track-controls button:last-child:hover {
+  transform: translateX(34px) scale(1.06);
+}
+
 .track-controls button:hover {
-  transform: scale(1.06);
   border-color: rgba(255, 231, 199, 0.34);
   background: rgba(35, 23, 66, 0.62);
 }
@@ -853,6 +868,7 @@ button { cursor: pointer; }
 nextjs-portal {
   display: none !important;
 }
+
 
 
 
