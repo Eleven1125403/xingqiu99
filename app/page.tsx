@@ -415,7 +415,7 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.08 }}
                 transition={{ duration: 0.9, ease: "easeOut" }}
-                aria-label="鏀惧ぇ鏄熸渤"
+                aria-label="放大星河"
               >
                 <svg className="overview-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                   <motion.polyline
@@ -438,7 +438,7 @@ export default function Home() {
                     transition={{ delay: (isPreloading ? 0 : 3) + index * (2 / Math.max(placedEvents.length - 1, 1)), duration: 0.42, ease: "easeOut" }}
                   />
                 ))}
-                <span className="overview-hint"><Maximize2 size={14} />鐐瑰嚮鏀惧ぇ鏄熸渤</span>
+                <span className="overview-hint"><Maximize2 size={14} />点击放大星河</span>
               </motion.button>
             ) : (
               <motion.div
@@ -587,7 +587,7 @@ export default function Home() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.28 }}
             type="button"
-            aria-label="鍏抽棴鏀惧ぇ鍥剧墖"
+            aria-label="关闭放大图片"
           >
             <motion.img
               src={previewAssetUrl(lightboxImage)}
