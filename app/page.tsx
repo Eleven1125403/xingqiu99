@@ -189,6 +189,7 @@ export default function Home() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [commentImage, setCommentImage] = useState<string | null>(null);
   const [isMusicOn, setIsMusicOn] = useState(false);
+  const [musicBlockedByUser, setMusicBlockedByUser] = useState(false);
   const [searchResults, setSearchResults] = useState<{ query: string; events: PlacedEvent[] } | null>(null);
   const [isPreloading, setIsPreloading] = useState(true);
   const [preloadProgress, setPreloadProgress] = useState(0);
@@ -318,13 +319,15 @@ export default function Home() {
     focusEvent(placedEvents[nextIndex]);
   };
 
-  const playMusic = async () => {
+  const playMusic = async (force = false) => {
+    if (musicBlockedByUser && !force) return;
     const audio = audioRef.current;
     if (!audio || !audio.paused) return;
 
     try {
       audio.volume = 0.45;
       await audio.play();
+      setMusicBlockedByUser(false);
       setIsMusicOn(true);
     } catch {
       setIsMusicOn(false);
@@ -364,11 +367,11 @@ export default function Home() {
       void playMusic();
     }, 1300);
     return () => window.clearTimeout(timer);
-  }, [isPreloading]);
+  }, [isPreloading, musicBlockedByUser]);
 
   const handleFirstInteraction = (event: React.PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
-    if (target.closest(".cover-music-button")) return;
+    if (target.closest(".cover-music-button") || target.closest(".floating-music-button")) return;
     void playMusic();
   };
 
@@ -378,11 +381,13 @@ export default function Home() {
 
     if (!audio.paused) {
       audio.pause();
+      setMusicBlockedByUser(true);
       setIsMusicOn(false);
       return;
     }
 
-    await playMusic();
+    setMusicBlockedByUser(false);
+    await playMusic(true);
   };
 
   return (
@@ -467,7 +472,7 @@ export default function Home() {
           transition={{ delay: isPreloading ? 0 : 3.1, duration: 1 }}
         >
           <p className="mb-5 text-[15px] uppercase tracking-[0.5em] text-violet-100/66">Rumors fly, Love is the only truth</p>
-          <h1 className="handwriting-title-wrap" aria-label="这条路，我只想和你走">
+          <h1 className="handwriting-title-wrap" aria-label="这趟路，我只想和你走">
             <img className="handwriting-title" src={assetUrl("/title-handwriting.png")} alt="" aria-hidden="true" decoding="async" />
           </h1>
         </motion.div>
@@ -706,6 +711,10 @@ export default function Home() {
     </main>
   );
 }
+
+
+
+
 
 
 
