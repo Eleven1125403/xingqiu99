@@ -33,6 +33,7 @@ const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${encodeAsse
 const previewAssetPath = (url: string) => url.startsWith("/archive/") ? url.replace(/^\/archive\//, "/archive-preview/").replace(/\.[^.\/]+$/, ".jpg") : url;
 const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
 const imageKey = (url: string) => decodeURIComponent(url.split("/").pop() || "").replace(/\.[^.]+$/, "").toLowerCase();
+const isCommentImage = (url: string | null) => Boolean(url?.includes("/comment/"));
 
 
 
@@ -604,7 +605,7 @@ export default function Home() {
       <AnimatePresence>
         {lightboxImage && (
           <motion.button
-            className="image-lightbox"
+            className={"image-lightbox" + (isCommentImage(lightboxImage) ? " is-comment" : "")}
             onClick={() => setLightboxImage(null)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -615,7 +616,7 @@ export default function Home() {
           >
             <motion.img
               src={previewAssetUrl(lightboxImage)}
-              alt="微博截图放大"
+              alt={isCommentImage(lightboxImage) ? "评论截图放大" : "微博截图放大"}
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
@@ -627,6 +628,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 

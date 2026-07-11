@@ -677,6 +677,12 @@ button { cursor: pointer; }
   box-shadow: 0 30px 120px rgba(0,0,0,0.58);
 }
 
+.image-lightbox.is-comment img {
+  max-width: min(78vw, 720px);
+  max-height: 78vh;
+}
+
+
 @keyframes backgroundFloat {
   from { transform: scale(1.14) translate3d(-0.6%, -0.3%, 0); }
   to { transform: scale(1.17) translate3d(0.6%, 0.4%, 0); }
@@ -742,6 +748,10 @@ button { cursor: pointer; }
 nextjs-portal {
   display: none !important;
 }
+
+
+
+
 
 
 
