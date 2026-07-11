@@ -185,6 +185,7 @@ export default function Home() {
   const [isVoyaging, setIsVoyaging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [cameraX, setCameraX] = useState(0);
+  const [isTrackDragging, setIsTrackDragging] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [isMusicOn, setIsMusicOn] = useState(false);
   const [searchResults, setSearchResults] = useState<{ query: string; events: PlacedEvent[] } | null>(null);
@@ -192,6 +193,8 @@ export default function Home() {
   const [preloadProgress, setPreloadProgress] = useState(0);
   const archiveRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const dragStateRef = useRef<{ pointerId: number; startX: number; startCameraX: number; moved: boolean } | null>(null);
+  const suppressStarClickRef = useRef(false);
   const reduceMotion = useReducedMotion();
 
   const placedEvents = useMemo(() => placeEvents(events), []);
@@ -203,12 +206,48 @@ export default function Home() {
   const previewPoints = useMemo(() => placedEvents.map((event) => event.previewX + "," + event.previewY).join(" "), [placedEvents]);
   const trackPoints = useMemo(() => placedEvents.map((event) => event.trackX + "," + event.trackY).join(" "), [placedEvents]);
 
+  const getCameraBounds = () => {
+    if (typeof window === "undefined") return { min: 0, max: 0, visibleWidth: trackWidth };
+    const panelReserve = window.innerWidth > 980 ? 420 : 0;
+    const visibleWidth = Math.max(320, window.innerWidth - panelReserve);
+    return { min: Math.min(0, -(trackWidth - visibleWidth + 120)), max: 0, visibleWidth };
+  };
+
+  const clampCameraX = (value: number) => {
+    const bounds = getCameraBounds();
+    return Math.min(bounds.max, Math.max(bounds.min, value));
+  };
+
   const centerCameraOn = (event: PlacedEvent) => {
     if (typeof window === "undefined") return;
-    const panelReserve = window.innerWidth > 980 ? 420 : 0;
-    const visibleWidth = window.innerWidth - panelReserve;
-    const target = Math.min(0, Math.max(-(trackWidth - visibleWidth + 120), visibleWidth * 0.45 - event.trackX));
-    setCameraX(target);
+    const { visibleWidth } = getCameraBounds();
+    setCameraX(clampCameraX(visibleWidth * 0.45 - event.trackX));
+  };
+
+  const beginTrackDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isExpanded || event.pointerType === "mouse" && event.button !== 0) return;
+    dragStateRef.current = { pointerId: event.pointerId, startX: event.clientX, startCameraX: cameraX, moved: false };
+    setIsTrackDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveTrackDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) > 4) drag.moved = true;
+    if (drag.moved) {
+      suppressStarClickRef.current = true;
+      setCameraX(clampCameraX(drag.startCameraX + delta));
+    }
+  };
+
+  const endTrackDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dragStateRef.current = null;
+    setIsTrackDragging(false);
+    window.setTimeout(() => { suppressStarClickRef.current = false; }, 80);
   };
 
   const focusEvent = (event: PlacedEvent, ceremonial = false) => {
@@ -468,17 +507,21 @@ export default function Home() {
             ) : (
               <motion.div
                 key="expanded"
-                className="expanded-viewport"
+                className={"expanded-viewport" + (isTrackDragging ? " is-dragging" : "")}
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                onPointerDown={beginTrackDrag}
+                onPointerMove={moveTrackDrag}
+                onPointerUp={endTrackDrag}
+                onPointerCancel={endTrackDrag}
               >
                 <motion.div
                   className="expanded-track"
                   style={{ width: trackWidth }}
                   animate={{ x: cameraX }}
-                  transition={{ duration: isVoyaging ? 1.8 : 1.05, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: isTrackDragging ? 0 : (isVoyaging ? 1.8 : 1.05), ease: [0.22, 1, 0.36, 1] }}
                 >
                   <svg className="expanded-lines" width={trackWidth} height="620" viewBox={"0 0 " + trackWidth + " 620"} aria-hidden="true">
                     <motion.polyline
@@ -500,7 +543,10 @@ export default function Home() {
                         key={event.id}
                         className={"memory-star " + (active ? "is-active " : "") + (showLabel ? "show-label" : "hide-label")}
                         style={{ left: event.trackX, top: event.trackY }}
-                        onClick={() => focusEvent(event)}
+                        onClick={() => {
+                          if (suppressStarClickRef.current) return;
+                          focusEvent(event);
+                        }}
                         initial={{ opacity: 0, scale: 0.35 }}
                         animate={{ opacity: 1, scale: active ? 1.2 : 1 }}
                         transition={{ delay: index * (1.35 / Math.max(placedEvents.length - 1, 1)), duration: 0.48, ease: "easeOut" }}
@@ -512,6 +558,7 @@ export default function Home() {
                     );
                   })}
                 </motion.div>
+              <div className="drag-hint">按住左右拖动星轨</div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -628,6 +675,10 @@ export default function Home() {
     </main>
   );
 }
+
+
+
+
 
 
 
