@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
   color-scheme: dark;
@@ -867,3 +867,51 @@ nextjs-portal {
 
 
 
+
+.image-frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.slot-decoration {
+  display: block;
+  width: min(68%, 260px);
+  max-height: 120px;
+  object-fit: contain;
+  align-self: center;
+  margin: 6px auto 0;
+  opacity: 0.92;
+  filter: drop-shadow(0 10px 24px rgba(8, 4, 20, 0.2));
+  pointer-events: none;
+}
+
+.ending-content {
+  display: grid;
+  gap: 22px;
+  margin-top: 28px;
+}
+
+.ending-decoration {
+  display: block;
+  width: min(86%, 560px);
+  max-height: 300px;
+  object-fit: contain;
+  justify-self: center;
+  opacity: 0.95;
+  filter: drop-shadow(0 18px 42px rgba(4, 0, 16, 0.28));
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .slot-decoration {
+    width: min(76%, 230px);
+    max-height: 104px;
+  }
+
+  .ending-decoration {
+    width: min(96%, 420px);
+    max-height: 240px;
+  }
+}

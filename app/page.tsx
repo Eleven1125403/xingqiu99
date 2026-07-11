@@ -21,7 +21,7 @@ const endingEvent: ArchiveEvent = {
   title: "\u672a\u5b8c\u5f85\u7eed",
   shortTitle: "\u672a\u5b8c\u5f85\u7eed",
   category: "ending",
-  summary: "\u55e8\u55e8\uff01\u611f\u8c22\u4f60\u770b\u5230\u8fd9\u91cc\uff0c\u91cd\u65b0\u8d70\u4e86\u4e00\u904d\u4ed6\u4eec\u7684\u6765\u65f6\u8def\u3002\n\n\u65f6\u95f4\u5728\u6b64\u6253\u4e86\u4e2a\u7ed3\uff0c\u672a\u6765\u4f1a\u6709\u66f4\u591a\u66f4\u591a\u7684\u6545\u4e8b\u7b49\u7740\u6211\u4eec\u02f6>\u15dc<\u02f6\n\n\u5e0c\u671b\u5728\u4e0b\u4e00\u523b\uff0c\u56de\u5934\u65f6\uff0c\u6211\u4eec\u4f9d\u7136\u5728\u5f7c\u6b64\u8eab\u8fb9\u3002\u8fd9\u6761\u8def\uff0c\u6211\u4eec\u548c\u4ed6\u4eec\u4e00\u8d77\u8d70\u3002\n\n\u795d\u4f60\u73b0\u751f\u6109\u5feb\uff0c\u597d\u4e8b\u82b1\u751f\ud83e\udd5c\n\n\u671f\u5f85\u4ed6\u4eec\uff0c\u4f1a\u6709\u4e00\u4e2a\u98ce\u5149\u660e\u5a9a\u7684\u672a\u6765\u3002",
+  summary: "\u55e8\u55e8\uff01\u611f\u8c22\u4f60\u770b\u5230\u8fd9\u91cc\uff0c\u91cd\u65b0\u8d70\u4e86\u4e00\u904d\u4ed6\u4eec\u7684\u6765\u65f6\u8def\u3002\n\n\u65f6\u95f4\u5728\u6b64\u6253\u4e86\u4e2a\u7ed3\uff0c\u672a\u6765\u4f1a\u6709\u66f4\u591a\u66f4\u591a\u7684\u6545\u4e8b\u7b49\u7740\u6211\u4eec\u02f6>\u15dc<\u02f6\n\n\u5e0c\u671b\u5728\u4e0b\u4e00\u523b\uff0c\u56de\u5934\u65f6\uff0c\u6211\u4eec\u4f9d\u7136\u5728\u5f7c\u6b64\u8eab\u8fb9\u3002\u8fd9\u8d9f\u8def\uff0c\u6211\u4eec\u548c\u4ed6\u4eec\u4e00\u8d77\u8d70\u3002\n\n\u795d\u4f60\u73b0\u751f\u6109\u5feb\uff0c\u597d\u4e8b\u82b1\u751f\ud83e\udd5c\ud83d\udc9c\n\n\u671f\u5f85\u4ed6\u4eec\uff0c\u4f1a\u6709\u4e00\u4e2a\u98ce\u5149\u660e\u5a9a\u7684\u672a\u6765\u3002",
   tags: ["\u672a\u5b8c\u5f85\u7eed"],
   imageGroups: { qiu: [], xing: [], other: [] },
 };
@@ -35,6 +35,12 @@ const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
 const imageKey = (url: string) => decodeURIComponent(url.split("/").pop() || "").replace(/\.[^.]+$/, "").toLowerCase();
 const isCommentImage = (url: string | null) => Boolean(url?.includes("/comment/"));
 
+const slotDecorations: Record<string, Partial<Record<"xing" | "qiu", string>>> = {
+  "\u80b2\u6709\u4e00\u5b50": { xing: "/decorations/yu-you-yi-zi-xing.png" },
+  "\u5e73\u5c40\u4e0e\u8d25\u5317": { qiu: "/decorations/pingju-baibei-qiu.png" },
+};
+const endingDecoration = "/decorations/ending-walk.png";
+
 
 
 const starField = Array.from({ length: 30 }, (_, index) => ({
@@ -46,7 +52,7 @@ const starField = Array.from({ length: 30 }, (_, index) => ({
 }));
 
 
-function ImageSwitcher({ label, images, comments, onOpen, onCommentOpen }: { label: string; images: string[]; comments?: Record<string, string[]>; onOpen: (image: string) => void; onCommentOpen: (image: string) => void }) {
+function ImageSwitcher({ label, images, comments, decoration, onOpen, onCommentOpen }: { label: string; images: string[]; comments?: Record<string, string[]>; decoration?: string; onOpen: (image: string) => void; onCommentOpen: (image: string) => void }) {
   const [index, setIndex] = useState(0);
   if (images.length === 0) return null;
   const current = images[index % images.length];
@@ -58,21 +64,24 @@ function ImageSwitcher({ label, images, comments, onOpen, onCommentOpen }: { lab
 
   return (
     <div className="image-switcher">
-      <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "截图放大"}>
-        <img src={previewAssetUrl(current)} alt={label + "截图"} loading="eager" decoding="async" />
-      </button>
-      <div className="image-actions">
-        {images.length > 1 && (
-          <button className="image-switcher-label" onClick={next} type="button" aria-label="切换截图">
-            {index + 1}/{images.length}，点击可切换
-          </button>
-        )}
-        {currentComments.length > 0 && (
-          <button className="comment-button" onClick={() => onCommentOpen(currentComments[0])} type="button" aria-label="查看评论截图">
-            点击查看评论
-          </button>
-        )}
+      <div className="image-frame">
+        <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "\u622a\u56fe\u653e\u5927"}>
+          <img src={previewAssetUrl(current)} alt={label + "\u622a\u56fe"} loading="eager" decoding="async" />
+        </button>
+        <div className="image-actions">
+          {images.length > 1 && (
+            <button className="image-switcher-label" onClick={next} type="button" aria-label="\u5207\u6362\u622a\u56fe">
+              {index + 1}/{images.length}{"\uff0c\u70b9\u51fb\u53ef\u5207\u6362"}
+            </button>
+          )}
+          {currentComments.length > 0 && (
+            <button className="comment-button" onClick={() => onCommentOpen(currentComments[0])} type="button" aria-label="\u67e5\u770b\u8bc4\u8bba\u622a\u56fe">
+              {"\u70b9\u51fb\u67e5\u770b\u8bc4\u8bba"}
+            </button>
+          )}
+        </div>
       </div>
+      {decoration && <img className="slot-decoration" src={assetUrl(decoration)} alt="\u8865\u5145\u63d2\u56fe" loading="eager" decoding="async" />}
     </div>
   );
 }
@@ -81,6 +90,7 @@ function MemoryImages({ event, onOpen, onCommentOpen }: { event: PlacedEvent; on
   const { qiu, xing, other } = event.imageGroups;
   const hasPair = qiu.length > 0 || xing.length > 0;
   const hasImages = hasPair || other.length > 0;
+  const decorations = slotDecorations[event.title] || {};
 
   if (!hasImages && event.category === "ending") return null;
 
@@ -97,8 +107,8 @@ function MemoryImages({ event, onOpen, onCommentOpen }: { event: PlacedEvent; on
     <div className="memory-images mt-5">
       {hasPair && (
         <div className={"memory-image-pair " + (qiu.length === 0 || xing.length === 0 ? "is-single" : "") }>
-          <ImageSwitcher label="xing" images={xing} comments={event.comments} onOpen={onOpen} onCommentOpen={onCommentOpen} />
-          <ImageSwitcher label="qiu" images={qiu} comments={event.comments} onOpen={onOpen} onCommentOpen={onCommentOpen} />
+          <ImageSwitcher label="xing" images={xing} comments={event.comments} decoration={decorations.xing} onOpen={onOpen} onCommentOpen={onCommentOpen} />
+          <ImageSwitcher label="qiu" images={qiu} comments={event.comments} decoration={decorations.qiu} onOpen={onOpen} onCommentOpen={onCommentOpen} />
         </div>
       )}
       {other.length > 0 && (
@@ -653,7 +663,12 @@ export default function Home() {
 
             <MemoryImages event={selected} onOpen={setLightboxImage} onCommentOpen={setCommentImage} />
 
-            {selected.category === "ending" && <p className="mt-7 whitespace-pre-line text-base leading-8 text-violet-50/72">{selected.summary}</p>}
+            {selected.category === "ending" && (
+              <div className="ending-content">
+                <p className="whitespace-pre-line text-base leading-8 text-violet-50/72">{selected.summary}</p>
+                <img className="ending-decoration" src={assetUrl(endingDecoration)} alt="\u672a\u5b8c\u5f85\u7eed\u63d2\u56fe" loading="eager" decoding="async" />
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap gap-2">
               {selected.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}
