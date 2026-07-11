@@ -583,7 +583,8 @@ button { cursor: pointer; }
   background: transparent;
   padding: 0;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .image-switcher img {
@@ -597,7 +598,8 @@ button { cursor: pointer; }
 
 .image-open {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   min-height: 0;
   border: 0;
@@ -877,12 +879,12 @@ nextjs-portal {
 
 .slot-decoration {
   display: block;
-  width: min(68%, 260px);
-  max-height: 120px;
+  width: min(48%, 190px);
+  max-height: 88px;
   object-fit: contain;
   align-self: center;
-  margin: 6px auto 0;
-  opacity: 0.92;
+  margin: 8px auto 0;
+  opacity: 0.78;
   filter: drop-shadow(0 10px 24px rgba(8, 4, 20, 0.2));
   pointer-events: none;
 }
@@ -906,8 +908,8 @@ nextjs-portal {
 
 @media (max-width: 900px) {
   .slot-decoration {
-    width: min(76%, 230px);
-    max-height: 104px;
+    width: min(58%, 170px);
+    max-height: 78px;
   }
 
   .ending-decoration {
