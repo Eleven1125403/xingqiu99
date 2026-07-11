@@ -155,14 +155,17 @@ const eventMatchesQuery = (event: ArchiveEvent, queryText: string) => {
 
 const roundCoord = (value: number) => Math.round(value * 1000) / 1000;
 
-const collectPreloadAssets = () => {
+const collectCriticalPreloadAssets = () => ["/constellation-bg.jpg", "/title-handwriting.png"];
+
+const collectArchivePreloadAssets = () => {
   const archiveImages = events.flatMap((event) => [
     ...event.imageGroups.qiu,
     ...event.imageGroups.xing,
     ...event.imageGroups.other,
     ...Object.values(event.comments || {}).flat(),
   ]);
-  return Array.from(new Set(["/constellation-bg.jpg", "/title-handwriting.png", ...archiveImages.map(previewAssetPath)]));
+  const decorations = Object.values(slotDecorations).flatMap((entry) => Object.values(entry).filter(Boolean) as string[]);
+  return Array.from(new Set([...archiveImages.map(previewAssetPath), ...decorations, endingDecoration]));
 };
 
 const preloadImage = (url: string) => new Promise<void>((resolve) => {
@@ -210,7 +213,8 @@ export default function Home() {
   const reduceMotion = useReducedMotion();
 
   const placedEvents = useMemo(() => placeEvents(events), []);
-  const preloadAssets = useMemo(() => collectPreloadAssets(), []);
+  const preloadAssets = useMemo(() => collectCriticalPreloadAssets(), []);
+  const backgroundPreloadAssets = useMemo(() => collectArchivePreloadAssets(), []);
   const selected = placedEvents.find((event) => event.id === selectedId);
   const selectedIndex = selected ? placedEvents.findIndex((event) => event.id === selected.id) : -1;
   const trackWidth = Math.max(1800, placedEvents.length * 112 + 280);
@@ -349,7 +353,13 @@ export default function Home() {
     let completed = 0;
     const total = Math.max(preloadAssets.length, 1);
     const queue = [...preloadAssets];
-    const workers = Array.from({ length: Math.min(8, queue.length) }, async () => {
+    const fallback = window.setTimeout(() => {
+      if (!cancelled) {
+        setPreloadProgress(100);
+        setIsPreloading(false);
+      }
+    }, 4200);
+    const workers = Array.from({ length: Math.min(2, queue.length) }, async () => {
       while (queue.length > 0 && !cancelled) {
         const asset = queue.shift();
         if (!asset) continue;
@@ -361,15 +371,38 @@ export default function Home() {
 
     void Promise.all(workers).then(() => {
       if (!cancelled) {
+        window.clearTimeout(fallback);
         setPreloadProgress(100);
-        window.setTimeout(() => setIsPreloading(false), 520);
+        window.setTimeout(() => setIsPreloading(false), 420);
       }
     });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(fallback);
     };
   }, [preloadAssets]);
+
+  useEffect(() => {
+    if (isPreloading) return;
+    let cancelled = false;
+    const queue = [...backgroundPreloadAssets];
+    const connection = navigator as Navigator & { connection?: { saveData?: boolean } };
+    const workerCount = connection.connection?.saveData ? 1 : window.innerWidth < 900 ? 2 : 4;
+    const workers = Array.from({ length: Math.min(workerCount, queue.length) }, async () => {
+      while (queue.length > 0 && !cancelled) {
+        const asset = queue.shift();
+        if (!asset) continue;
+        await preloadImage(asset);
+      }
+    });
+
+    void Promise.all(workers);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPreloading, backgroundPreloadAssets]);
 
   useEffect(() => {
     if (isPreloading) return;
