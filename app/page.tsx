@@ -84,7 +84,7 @@ function MemoryImages({ event, onOpen }: { event: PlacedEvent; onOpen: (image: s
   }
 
   return (
-    <div className="memory-images mt-8">
+    <div className="memory-images mt-5">
       {hasPair && (
         <div className={"memory-image-pair " + (qiu.length === 0 || xing.length === 0 ? "is-single" : "") }>
           <ImageSwitcher label="xing" images={xing} onOpen={onOpen} />
@@ -565,12 +565,12 @@ export default function Home() {
 
             {selected.category === "ending" && <p className="mt-7 whitespace-pre-line text-base leading-8 text-violet-50/72">{selected.summary}</p>}
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {selected.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}
             </div>
 
-            <div className="mt-9 grid grid-cols-2 gap-3">
-              <button className="nav-card" onClick={() => goTo(-1)}><ChevronLeft size={18} />定位</button>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="nav-card" onClick={() => goTo(-1)}><ChevronLeft size={18} />上一页</button>
               <button className="nav-card justify-end" onClick={() => goTo(1)}>下一篇<ChevronRight size={18} /></button>
             </div>
           </motion.aside>
@@ -603,6 +603,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 
