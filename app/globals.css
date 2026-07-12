@@ -825,11 +825,10 @@ button { cursor: pointer; }
   .comment-side-panel {
     left: 18px;
     right: 18px;
-    top: 50%;
+    top: max(84px, 12vh);
     bottom: auto;
     width: auto;
-    max-height: min(72vh, 620px);
-    transform: translateY(-50%);
+    max-height: min(74vh, 620px);
     z-index: 75;
     padding: 12px;
     background: linear-gradient(145deg, rgba(24, 17, 45, 0.88), rgba(10, 7, 22, 0.82));
