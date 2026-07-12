@@ -822,11 +822,55 @@ button { cursor: pointer; }
     padding: 18px;
   }
   .constellation-stage { min-height: 620px; margin-top: 7vh; }
-  .comment-side-panel { top: auto; bottom: 14px; max-height: 42vh; }
-  .comment-side-panel img { max-height: calc(42vh - 58px); }
+  .comment-side-panel {
+    left: 18px;
+    right: 18px;
+    top: 50%;
+    bottom: auto;
+    width: auto;
+    max-height: min(72vh, 620px);
+    transform: translateY(-50%);
+    z-index: 75;
+    padding: 12px;
+    background: linear-gradient(145deg, rgba(24, 17, 45, 0.88), rgba(10, 7, 22, 0.82));
+  }
+  .comment-side-panel img { max-height: calc(min(74vh, 620px) - 58px); }
 }
 
 @media (max-width: 640px) {
+  section.relative.z-10 {
+    padding-top: 188px;
+  }
+
+  section.relative.z-10 > .mb-6 {
+    margin-bottom: 0;
+  }
+
+  section.relative.z-10 > .mb-6 p {
+    margin-bottom: 14px;
+    max-width: 88vw;
+    font-size: 11px;
+    line-height: 1.75;
+    letter-spacing: 0.34em;
+  }
+
+  .handwriting-title-wrap {
+    width: min(96vw, 560px);
+  }
+
+  .constellation-stage {
+    min-height: calc(100vh - 250px);
+    margin-top: 2vh;
+  }
+
+  .galaxy-overview {
+    top: 64%;
+    height: min(330px, 40vh);
+  }
+
+  .overview-hint {
+    display: none;
+  }
   .memory-image-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
   .memory-image-pair.is-single { grid-template-columns: minmax(0, 1fr); }
   .image-switcher { min-height: 0; }
@@ -838,7 +882,8 @@ button { cursor: pointer; }
   .search-shell { width: 100%; min-height: 44px; }
   header { flex-direction: column; align-items: stretch !important; }
   .header-actions { width: 100%; justify-content: space-between; gap: 10px; }
-  .cover-music-button, .memory-button { flex: 1; justify-content: center; padding-inline: 12px; }
+  header.fixed { padding-top: 12px; padding-bottom: 10px; background: linear-gradient(180deg, rgba(5, 2, 18, 0.58), rgba(5, 2, 18, 0)); }
+  .cover-music-button, .memory-button { flex: 1; justify-content: center; min-height: 42px; padding-inline: 10px; font-size: 14px; }
   .memory-button { justify-content: center; }
   .floating-music-button { right: 18px; bottom: 18px; width: 48px; height: 48px; }
 }
