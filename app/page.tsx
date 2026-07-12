@@ -31,7 +31,14 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const encodeAssetPath = (url: string) => url.split("/").map((part, index) => index === 0 ? part : encodeURIComponent(decodeURIComponent(part))).join("/");
 const assetUrl = (url: string) => url.startsWith("/") ? `${basePath}${encodeAssetPath(url)}` : url;
 const previewAssetPath = (url: string) => url.startsWith("/archive/") ? url.replace(/^\/archive\//, "/archive-preview/").replace(/\.[^.\/]+$/, ".jpg") : url;
+const mobilePreviewAssetPath = (url: string) => url.startsWith("/archive/") ? url.replace(/^\/archive\//, "/archive-mobile/").replace(/\.[^.\/]+$/, ".jpg") : previewAssetPath(url);
 const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
+const mobilePreviewAssetUrl = (url: string) => assetUrl(mobilePreviewAssetPath(url));
+const responsivePreviewProps = (url: string) => ({
+  src: previewAssetUrl(url),
+  srcSet: `${mobilePreviewAssetUrl(url)} 860w, ${previewAssetUrl(url)} 1400w`,
+  sizes: "(max-width: 1024px) 92vw, 46vw",
+});
 const imageKey = (url: string) => decodeURIComponent(url.split("/").pop() || "").replace(/\.[^.]+$/, "").toLowerCase();
 const isCommentImage = (url: string | null) => Boolean(url?.includes("/comment/"));
 
@@ -66,7 +73,7 @@ function ImageSwitcher({ label, images, comments, decoration, onOpen, onCommentO
     <div className="image-switcher">
       <div className="image-frame">
         <button className="image-open" onClick={() => onOpen(current)} type="button" aria-label={label + "\u622a\u56fe\u653e\u5927"}>
-          <img src={previewAssetUrl(current)} alt={label + "\u622a\u56fe"} loading="eager" decoding="async" />
+          <img {...responsivePreviewProps(current)} alt={label + "\u622a\u56fe"} loading="eager" decoding="async" />
         </button>
         <div className="image-actions">
           {images.length > 1 && (
@@ -118,7 +125,7 @@ function MemoryImages({ event, onOpen, onCommentOpen }: { event: PlacedEvent; on
             return (
               <div className="image-switcher" key={image}>
                 <button className="extra-image-button image-open" type="button" onClick={() => onOpen(image)}>
-                  <img src={previewAssetUrl(image)} alt={event.title + "截图"} loading="eager" decoding="async" />
+                  <img {...responsivePreviewProps(image)} alt={event.title + "截图"} loading="eager" decoding="async" />
                 </button>
                 {currentComments.length > 0 && (
                   <div className="image-actions">
@@ -157,7 +164,7 @@ const roundCoord = (value: number) => Math.round(value * 1000) / 1000;
 
 const collectCriticalPreloadAssets = () => ["/constellation-bg.jpg", "/title-handwriting.png"];
 
-const collectArchivePreloadAssets = () => {
+const collectArchivePreloadAssets = (mobile = false) => {
   const archiveImages = events.flatMap((event) => [
     ...event.imageGroups.qiu,
     ...event.imageGroups.xing,
@@ -165,7 +172,8 @@ const collectArchivePreloadAssets = () => {
     ...Object.values(event.comments || {}).flat(),
   ]);
   const decorations = Object.values(slotDecorations).flatMap((entry) => Object.values(entry).filter(Boolean) as string[]);
-  return Array.from(new Set([...archiveImages.map(previewAssetPath), ...decorations, endingDecoration]));
+  const imagePath = mobile ? mobilePreviewAssetPath : previewAssetPath;
+  return Array.from(new Set([...archiveImages.map(imagePath), ...decorations, endingDecoration]));
 };
 
 const preloadImage = (url: string) => new Promise<void>((resolve) => {
@@ -214,7 +222,8 @@ export default function Home() {
 
   const placedEvents = useMemo(() => placeEvents(events), []);
   const preloadAssets = useMemo(() => collectCriticalPreloadAssets(), []);
-  const backgroundPreloadAssets = useMemo(() => collectArchivePreloadAssets(), []);
+  const mobilePreloadAssets = useMemo(() => collectArchivePreloadAssets(true), []);
+  const backgroundPreloadAssets = useMemo(() => collectArchivePreloadAssets(false), []);
   const selected = placedEvents.find((event) => event.id === selectedId);
   const selectedIndex = selected ? placedEvents.findIndex((event) => event.id === selected.id) : -1;
   const trackWidth = Math.max(1800, placedEvents.length * 112 + 280);
@@ -351,15 +360,17 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     let completed = 0;
-    const total = Math.max(preloadAssets.length, 1);
-    const queue = [...preloadAssets];
+    const shouldFullPreload = window.matchMedia("(max-width: 1024px)").matches;
+    const queue = Array.from(new Set([...preloadAssets, ...(shouldFullPreload ? mobilePreloadAssets : [])]));
+    const total = Math.max(queue.length, 1);
     const fallback = window.setTimeout(() => {
       if (!cancelled) {
         setPreloadProgress(100);
         setIsPreloading(false);
       }
-    }, 4200);
-    const workers = Array.from({ length: Math.min(2, queue.length) }, async () => {
+    }, shouldFullPreload ? 45000 : 4200);
+    const workerCount = shouldFullPreload ? 6 : 2;
+    const workers = Array.from({ length: Math.min(workerCount, queue.length) }, async () => {
       while (queue.length > 0 && !cancelled) {
         const asset = queue.shift();
         if (!asset) continue;
@@ -381,11 +392,12 @@ export default function Home() {
       cancelled = true;
       window.clearTimeout(fallback);
     };
-  }, [preloadAssets]);
+  }, [preloadAssets, mobilePreloadAssets]);
 
   useEffect(() => {
     if (isPreloading) return;
     let cancelled = false;
+    if (window.matchMedia("(max-width: 1024px)").matches) return;
     const queue = [...backgroundPreloadAssets];
     const connection = navigator as Navigator & { connection?: { saveData?: boolean } };
     const workerCount = connection.connection?.saveData ? 1 : window.innerWidth < 900 ? 2 : 4;
@@ -729,7 +741,7 @@ export default function Home() {
               <span>评论截图</span>
               <button type="button" onClick={() => setCommentImage(null)} aria-label="关闭评论截图"><X size={16} /></button>
             </div>
-            <img src={previewAssetUrl(commentImage)} alt="评论截图" loading="eager" decoding="async" />
+            <img {...responsivePreviewProps(commentImage)} alt="评论截图" loading="eager" decoding="async" />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -746,7 +758,7 @@ export default function Home() {
             aria-label="关闭放大图片"
           >
             <motion.img
-              src={previewAssetUrl(lightboxImage)}
+              {...responsivePreviewProps(lightboxImage)}
               alt={isCommentImage(lightboxImage) ? "评论截图放大" : "微博截图放大"}
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
