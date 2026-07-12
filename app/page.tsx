@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -36,7 +36,7 @@ const previewAssetUrl = (url: string) => assetUrl(previewAssetPath(url));
 const mobilePreviewAssetUrl = (url: string) => assetUrl(mobilePreviewAssetPath(url));
 const responsivePreviewProps = (url: string) => ({
   src: previewAssetUrl(url),
-  srcSet: `${mobilePreviewAssetUrl(url)} 860w, ${previewAssetUrl(url)} 1400w`,
+  srcSet: `${mobilePreviewAssetUrl(url)} 680w, ${previewAssetUrl(url)} 1400w`,
   sizes: "(max-width: 1024px) 92vw, 46vw",
 });
 const imageKey = (url: string) => decodeURIComponent(url.split("/").pop() || "").replace(/\.[^.]+$/, "").toLowerCase();
